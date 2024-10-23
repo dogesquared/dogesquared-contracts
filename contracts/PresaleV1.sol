@@ -41,6 +41,7 @@ contract PresaleV1 is
     uint256[] public percentages;
 
     address public admin;
+    bool public wertBuyRestrictionStatus;
     bool public dynamicTimeFlag;
     bool public whitelistClaimOnly;
     bool public stakeingWhitelistStatus;
@@ -477,10 +478,12 @@ contract PresaleV1 is
         nonReentrant
         returns (bool)
     {
-        require(
-            wertWhitelisted[_msgSender()],
-            "User not whitelisted for this tx"
-        );
+        if (wertBuyRestrictionStatus) {
+            require(
+                wertWhitelisted[_msgSender()],
+                "User not whitelisted for this tx"
+            );
+        }
         uint256 usdPrice = calculatePrice(_amount);
         uint256 ethAmount = (usdPrice * baseDecimals) / getLatestPrice();
         require(msg.value >= ethAmount, "Less payment");
@@ -698,6 +701,10 @@ contract PresaleV1 is
         require(success, "Token transfer failed");
         emit TokensAdded(_saleToken, noOfTokens, block.timestamp);
         return true;
+    }
+
+    function setWertBuyRestrictionStatus(bool _status) external onlyOwner {
+        wertBuyRestrictionStatus = _status;
     }
 
     ///  @dev Permission to release tokens during presale and before the start of the claim.
