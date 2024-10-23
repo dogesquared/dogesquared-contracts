@@ -1,0 +1,49 @@
+{
+  "name": "dogesquared-contracts",
+  "version": "1.0.0",
+  "description": "$DOGE² Smart Contracts",
+  "private": true,
+  "license": "MIT",
+  "author": {
+    "name": "Aleksandr Ivannikov",
+    "email": "hi@ivannikov.pro",
+    "url": "https://ivannikov.pro"
+  },
+  "scripts": {
+    "clean": "rimraf ./build/ && mkdirp ./build/ && rimraf ./flatten/ && mkdirp ./flatten/",
+    "precompile": "npm run clean",
+    "compile": "truffle compile",
+    "postcompile": "npm run flatten",
+    "deploy": "truffle migrate --network",
+    "verify": "truffle run verify --verifiers=etherscan --network",
+    "test": "truffle test",
+    "flatten": "waffle flatten",
+    "contract-size": "truffle run contract-size",
+    "ganache": "node ./scripts/ganache.js"
+  },
+  "files": [
+    "contracts",
+    "build"
+  ],
+  "dependencies": {
+    "@openzeppelin/contracts": "4.9.6",
+    "@openzeppelin/contracts-upgradeable": "4.9.6"
+  },
+  "devDependencies": {
+    "@openzeppelin/truffle-upgrades": "^1.21.0",
+    "@truffle/hdwallet-provider": "^2.1.15",
+    "bignumber.js": "^9.1.2",
+    "csv-parse": "^5.5.6",
+    "csv-stringify": "^6.5.1",
+    "dotenv": "^16.4.5",
+    "ethereum-waffle": "^4.0.10",
+    "ethers": "^6.13.2",
+    "ganache": "^7.9.2",
+    "keccak256": "^1.0.6",
+    "mkdirp": "^3.0.1",
+    "rimraf": "^5.0.7",
+    "truffle": "^5.11.5",
+    "truffle-contract-size": "^2.0.1",
+    "truffle-plugin-verify": "^0.6.7"
+  }
+}
