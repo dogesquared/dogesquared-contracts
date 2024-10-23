@@ -1,1 +1,1 @@
-# Doge² Smart Contracts
+# $DOGE² Smart Contracts
