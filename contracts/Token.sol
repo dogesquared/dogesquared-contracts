@@ -55,6 +55,7 @@ contract Token is ERC20, ERC20Burnable, ERC20Permit, Ownable {
      * the restriction for whitelisted addresses is lifted.
      */
     function openTrading() external onlyOwner {
+        require(!_tradeIsOpen, "Trading has already started");
         _tradeIsOpen = true;
         emit TradeIsOpen(block.timestamp);
     }
