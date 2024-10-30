@@ -40,11 +40,11 @@ contract Token is ERC20, ERC20Burnable, ERC20Permit, Ownable {
         _isWhitelisted[_msgSender()] = true;
 
         uint256 marketingReserve = 750_000_000 * (10 ** decimals()); // 15%
-        _mint(_msgSender(), stakingReserve);
+        _mint(_msgSender(), marketingReserve);
         _isWhitelisted[_msgSender()] = true;
 
         uint256 developmentReserve = 1_000_000_000 * (10 ** decimals()); // 20%
-        _mint(_msgSender(), stakingReserve);
+        _mint(_msgSender(), developmentReserve);
         _isWhitelisted[_msgSender()] = true;
 
         _tradeIsOpen = false;
