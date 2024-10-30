@@ -19,13 +19,6 @@ contract Token is ERC20, ERC20Burnable, ERC20Permit, Ownable {
     mapping(address account => bool) private _isWhitelisted;
 
     /**
-     * @dev Event emitted when an account is added to or removed from the whitelist.
-     * @param account The address of the account that was whitelisted or removed from the whitelist.
-     * @param status A boolean indicating whether the account was added to (`true`) or removed from (`false`) the whitelist.
-     */
-    event WhitelistChanged(address indexed account, bool status);
-
-    /**
      * @dev Event emitted when trading is officially opened.
      * @param timestamp The block timestamp when trading was opened.
      */
@@ -37,7 +30,6 @@ contract Token is ERC20, ERC20Burnable, ERC20Permit, Ownable {
      */
     constructor() ERC20("DOGE SQUARED", "DOGE2") ERC20Permit("DOGE SQUARED") {
         _isWhitelisted[_msgSender()] = true;
-        emit WhitelistChanged(_msgSender(), true);
 
         _mint(_msgSender(), 5_000_000_000 * 10 ** decimals());
     }
@@ -70,19 +62,13 @@ contract Token is ERC20, ERC20Burnable, ERC20Permit, Ownable {
     }
 
     /**
-     * @dev Allows the contract owner to whitelist or remove multiple accounts in one transaction.
+     * @dev Allows the contract owner to whitelist or remove account.
      * Whitelisted accounts can transfer even when trading is not fully open.
-     * @param accounts An array of addresses to be added or removed from the whitelist.
+     * @param account Addresses to be added or removed from the whitelist.
      * @param status Boolean indicating whether to whitelist (`true`) or remove from the whitelist (`false`).
      */
-    function setWhitelist(
-        address[] calldata accounts,
-        bool status
-    ) external onlyOwner {
-        for (uint256 i = 0; i < accounts.length; i++) {
-            _isWhitelisted[accounts[i]] = status;
-            emit WhitelistChanged(accounts[i], status);
-        }
+    function setWhitelist(address account, bool status) external onlyOwner {
+        _isWhitelisted[account] = status;
     }
 
     /**
