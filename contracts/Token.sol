@@ -29,9 +29,25 @@ contract Token is ERC20, ERC20Burnable, ERC20Permit, Ownable {
      * and sets up the permit (EIP-2612) functionality.
      */
     constructor() ERC20("DOGE SQUARED", "DOGE2") ERC20Permit("DOGE SQUARED") {
+        _tradeIsOpen = true;
+
+        uint256 presaleReserve = 2_500_000_000 * (10 ** _decimals); // 50%
+        _mint(_msgSender(), presaleReserve);
         _isWhitelisted[_msgSender()] = true;
 
-        _mint(_msgSender(), 5_000_000_000 * 10 ** decimals());
+        uint256 stakingReserve = 750_000_000 * (10 ** _decimals); // 15%
+        _mint(_msgSender(), stakingReserve);
+        _isWhitelisted[_msgSender()] = true;
+
+        uint256 marketingReserve = 750_000_000 * (10 ** _decimals); // 15%
+        _mint(_msgSender(), stakingReserve);
+        _isWhitelisted[_msgSender()] = true;
+
+        uint256 developmentReserve = 1_000_000_000 * (10 ** _decimals); // 20%
+        _mint(_msgSender(), stakingReserve);
+        _isWhitelisted[_msgSender()] = true;
+
+        _tradeIsOpen = false;
     }
 
     /**
