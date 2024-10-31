@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Unlicense
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
@@ -41,6 +41,13 @@ contract StakingManager is Initializable, OwnableUpgradeable {
     event Deposit(address indexed user, uint256 amount);
     event Withdraw(address indexed user, uint256 amount);
     event HarvestRewards(address indexed user, uint256 amount);
+
+    /**
+     * @dev Event emitted when an account is added to or removed from the Blacklist.
+     * @param account The address of the account that was Blacklisted or removed from the Blacklist.
+     * @param status A boolean indicating whether the account was added to (`true`) or removed from (`false`) the Blacklist.
+     */
+    event UserBlacklistChanged(address indexed account, bool status);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -95,8 +102,8 @@ contract StakingManager is Initializable, OwnableUpgradeable {
         tokensStaked += _amount;
 
         // Deposit tokens
-        emit Deposit(msg.sender, _amount);
         stakeToken.safeTransferFrom(msg.sender, address(this), _amount);
+        emit Deposit(msg.sender, _amount);
     }
 
     /**
@@ -126,8 +133,8 @@ contract StakingManager is Initializable, OwnableUpgradeable {
         tokensStakedByPresale += _amount;
 
         // Deposit tokens
-        emit Deposit(_user, _amount);
         stakeToken.safeTransferFrom(presaleContract, address(this), _amount);
+        emit Deposit(_user, _amount);
     }
 
     /**
@@ -153,8 +160,8 @@ contract StakingManager is Initializable, OwnableUpgradeable {
         tokensStaked -= amount;
 
         // Withdraw tokens
-        emit Withdraw(msg.sender, amount);
         stakeToken.safeTransfer(msg.sender, amount);
+        emit Withdraw(msg.sender, amount);
     }
 
     /**
@@ -188,8 +195,8 @@ contract StakingManager is Initializable, OwnableUpgradeable {
                 rewardsToHarvest += userLockedRewards[_user];
                 userLockedRewards[_user] = 0;
             }
-            emit HarvestRewards(_user, rewardsToHarvest);
             stakeToken.safeTransfer(_user, rewardsToHarvest);
+            emit HarvestRewards(_user, rewardsToHarvest);
         } else {
             userLockedRewards[_user] += rewardsToHarvest;
         }
@@ -266,6 +273,7 @@ contract StakingManager is Initializable, OwnableUpgradeable {
     ) external onlyOwner {
         for (uint256 i = 0; i < _usersToBlacklist.length; i++) {
             isBlacklisted[_usersToBlacklist[i]] = true;
+            emit UserBlacklistChanged(_usersToBlacklist[i], true);
         }
     }
 
@@ -278,6 +286,7 @@ contract StakingManager is Initializable, OwnableUpgradeable {
     ) external onlyOwner {
         for (uint256 i = 0; i < _userToRemoveFromBlacklist.length; i++) {
             isBlacklisted[_userToRemoveFromBlacklist[i]] = false;
+            emit UserBlacklistChanged(_userToRemoveFromBlacklist[i], false);
         }
     }
 }

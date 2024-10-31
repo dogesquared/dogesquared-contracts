@@ -12,10 +12,13 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * It also implements transfer restrictions, allowing token transfers only to or from whitelisted addresses until trading is fully opened.
  */
 contract Token is ERC20, ERC20Burnable, ERC20Permit, Ownable {
-    /// @dev Boolean variable to track whether trading is open.
+    /// @dev Boolean variable to track whether trading is open. Until then, users can only buy, stake and unstake their tokens.
     bool private _tradeIsOpen = false;
 
-    /// @dev Mapping to track whitelisted addresses that are allowed to transfers before trading is fully open.
+    /**
+     * @dev Mapping to track whitelisted addresses that are allowed to transfers before trading is fully open.
+     * Whitelisted accounts can transfer or receive even when trading is not fully open.
+     */
     mapping(address account => bool) private _isWhitelisted;
 
     /**
@@ -25,29 +28,50 @@ contract Token is ERC20, ERC20Burnable, ERC20Permit, Ownable {
     event TradeIsOpen(uint256 timestamp);
 
     /**
+     * @dev Event emitted when an account is added to or removed from the whitelist.
+     * @param account The address of the account that was whitelisted or removed from the whitelist.
+     * @param status A boolean indicating whether the account was added to (`true`) or removed from (`false`) the whitelist.
+     */
+    event WhitelistChanged(address indexed account, bool status);
+
+    /**
      * @dev Constructor that initializes the token with a name and symbol, mints the total supply,
      * and sets up the permit (EIP-2612) functionality.
      */
     constructor() ERC20("DOGE SQUARED", "DOGE2") ERC20Permit("DOGE SQUARED") {
-        _tradeIsOpen = true;
+        /**
+         * DOGE2 Initial Token Distribution:
+         * - totalSupply        = 5,000,000,000 (5.00B) = 100%
+         * - presaleReserve     = 2,500,000,000 (2.50B) =  50%
+         * - stakingReserve     =   750,000,000 (0.75B) =  15%
+         * - marketingReserve   =   750,000,000 (0.75B) =  15%
+         * - developmentReserve = 1,000,000,000 (1.00B) =  20%
+         */
+        uint256 decimalsMultiplier = 10 ** decimals();
 
-        uint256 presaleReserve = 2_500_000_000 * (10 ** decimals()); // 50%
-        _mint(_msgSender(), presaleReserve);
-        _isWhitelisted[_msgSender()] = true;
+        uint256 presaleReserve = 2_500_000_000 * decimalsMultiplier;
+        address presaleContract = address(0); // TODO
+        _isWhitelisted[presaleContract] = true;
+        emit WhitelistChanged(presaleContract, true);
+        _mint(_msgSender(), presaleReserve); // TODO ??
 
-        uint256 stakingReserve = 750_000_000 * (10 ** decimals()); // 15%
-        _mint(_msgSender(), stakingReserve);
-        _isWhitelisted[_msgSender()] = true;
+        uint256 stakingReserve = 750_000_000 * decimalsMultiplier;
+        address stakingContract = address(0); // TODO
+        _isWhitelisted[stakingContract] = true;
+        emit WhitelistChanged(stakingContract, true);
+        _mint(stakingContract, stakingReserve);
 
-        uint256 marketingReserve = 750_000_000 * (10 ** decimals()); // 15%
-        _mint(_msgSender(), marketingReserve);
-        _isWhitelisted[_msgSender()] = true;
+        uint256 marketingReserve = 750_000_000 * decimalsMultiplier;
+        address marketingWallet = 0xD99C5E1fc1dc4eBC2a5ec8BA93347e06e3a6E01b;
+        _isWhitelisted[marketingWallet] = true;
+        emit WhitelistChanged(marketingWallet, true);
+        _mint(marketingWallet, marketingReserve);
 
-        uint256 developmentReserve = 1_000_000_000 * (10 ** decimals()); // 20%
-        _mint(_msgSender(), developmentReserve);
-        _isWhitelisted[_msgSender()] = true;
-
-        _tradeIsOpen = false;
+        uint256 developmentReserve = 1_000_000_000 * decimalsMultiplier;
+        address developmentWallet = 0x3eb941DBcB7bb65981914BA834ea0B96903c4952;
+        _isWhitelisted[developmentWallet] = true;
+        emit WhitelistChanged(developmentWallet, true);
+        _mint(developmentWallet, developmentReserve);
     }
 
     /**
@@ -59,8 +83,7 @@ contract Token is ERC20, ERC20Burnable, ERC20Permit, Ownable {
     }
 
     /**
-     * @dev Allows the contract owner to open trading for all users. Once trading is open,
-     * the restriction for whitelisted addresses is lifted.
+     * @dev Allows the contract owner to open trading for all users. Once trading is open, the restriction for whitelisted addresses is lifted.
      */
     function openTrading() external onlyOwner {
         require(!_tradeIsOpen, "Trading has already started");
@@ -70,6 +93,7 @@ contract Token is ERC20, ERC20Burnable, ERC20Permit, Ownable {
 
     /**
      * @dev Checks if a specific account is whitelisted.
+     * Whitelisted accounts can transfer or receive even when trading is not fully open.
      * @param account The address of the account to check.
      * @return Boolean indicating if the account is whitelisted (`true`) or not (`false`).
      */
@@ -78,13 +102,18 @@ contract Token is ERC20, ERC20Burnable, ERC20Permit, Ownable {
     }
 
     /**
-     * @dev Allows the contract owner to whitelist or remove account.
-     * Whitelisted accounts can transfer even when trading is not fully open.
-     * @param account Addresses to be added or removed from the whitelist.
+     * @dev Allows the contract owner to whitelist or remove multiple accounts in one transaction.
+     * @param accounts An array of addresses to be added or removed from the whitelist.
      * @param status Boolean indicating whether to whitelist (`true`) or remove from the whitelist (`false`).
      */
-    function setWhitelist(address account, bool status) external onlyOwner {
-        _isWhitelisted[account] = status;
+    function setWhitelist(
+        address[] calldata accounts,
+        bool status
+    ) external onlyOwner {
+        for (uint256 i = 0; i < accounts.length; i++) {
+            _isWhitelisted[accounts[i]] = status;
+            emit WhitelistChanged(accounts[i], status);
+        }
     }
 
     /**

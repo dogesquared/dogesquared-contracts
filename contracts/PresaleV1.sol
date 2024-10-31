@@ -121,8 +121,17 @@ contract PresaleV1 is
     /// @dev Event emitted when the signer address is updated.
     event SignerUpdated(address signer);
 
+    /**
+     * @dev Event emitted when an account is added to or removed from the Blacklist.
+     * @param account The address of the account that was Blacklisted or removed from the Blacklist.
+     * @param status A boolean indicating whether the account was added to (`true`) or removed from (`false`) the Blacklist.
+     */
+    event UserBlacklistChanged(address indexed account, bool status);
+
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() initializer {}
+    constructor() {
+        _disableInitializers();
+    }
 
     /**
      * @dev Initializes the contract and sets key parameters
@@ -478,6 +487,7 @@ contract PresaleV1 is
         nonReentrant
         returns (bool)
     {
+        require(_user != address(0), "_user cannot be zero");
         if (wertBuyRestrictionStatus) {
             require(
                 wertWhitelisted[_msgSender()],
@@ -679,13 +689,6 @@ contract PresaleV1 is
         // require(claimStart == 0, "Claim already set");
         claimStart = _claimStart;
 
-        emit ReleaseTokensUpdated(
-            releaseTokens,
-            _releaseTokens,
-            block.timestamp
-        );
-        releaseTokens = _releaseTokens;
-
         saleToken = _saleToken;
         whitelistClaimOnly = true;
         stakingManagerInterface = IStakingManager(_stakingManagerAddress);
@@ -700,6 +703,13 @@ contract PresaleV1 is
         );
         require(success, "Token transfer failed");
         emit TokensAdded(_saleToken, noOfTokens, block.timestamp);
+
+        emit ReleaseTokensUpdated(
+            releaseTokens,
+            _releaseTokens,
+            block.timestamp
+        );
+        releaseTokens = _releaseTokens;
         return true;
     }
 
@@ -915,7 +925,7 @@ contract PresaleV1 is
      * @dev Reverts with `SignerIsZeroAddress` if the signer address is zero.
      */
     function _ensureSignerIsNotZeroAddress() private view {
-        require(signer != address(0), "Signer is zero address");
+        require(signer != address(0), "Signer cannot be zero");
     }
 
     /**
@@ -972,6 +982,7 @@ contract PresaleV1 is
     ) external onlyOwner {
         for (uint256 i = 0; i < _usersToBlacklist.length; i++) {
             isBlacklisted[_usersToBlacklist[i]] = true;
+            emit UserBlacklistChanged(_usersToBlacklist[i], true);
         }
     }
 
@@ -984,6 +995,7 @@ contract PresaleV1 is
     ) external onlyOwner {
         for (uint256 i = 0; i < _userToRemoveFromBlacklist.length; i++) {
             isBlacklisted[_userToRemoveFromBlacklist[i]] = false;
+            emit UserBlacklistChanged(_userToRemoveFromBlacklist[i], false);
         }
     }
 
@@ -1032,6 +1044,7 @@ contract PresaleV1 is
      * @dev To manage time gap between two rounds
      */
     function manageTimeDiff() internal {
+        require(timeConstant != 0, "timeConstant cannot be zero");
         for (uint256 i; i < rounds[2].length - currentStep; i++) {
             rounds[2][currentStep + i] = block.timestamp + i * timeConstant;
         }
@@ -1042,6 +1055,7 @@ contract PresaleV1 is
      * @param _timeConstant time in <days>*24*60*60 format
      */
     function setTimeConstant(uint256 _timeConstant) external onlyOwner {
+        require(_timeConstant != 0, "timeConstant cannot be zero");
         timeConstant = _timeConstant;
     }
 

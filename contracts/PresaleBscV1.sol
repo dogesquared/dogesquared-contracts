@@ -62,7 +62,9 @@ contract PresaleBscV1 is
     );
 
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() initializer {}
+    constructor() {
+        _disableInitializers();
+    }
 
     /**
      * @dev Initializes the contract and sets key parameters
@@ -451,6 +453,7 @@ contract PresaleBscV1 is
      * @dev To manage time gap between two rounds
      */
     function manageTimeDiff() internal {
+        require(timeConstant != 0, "timeConstant cannot be zero");
         for (uint256 i; i < rounds[2].length - currentStep; i++) {
             rounds[2][currentStep + i] = block.timestamp + i * timeConstant;
         }
@@ -461,6 +464,7 @@ contract PresaleBscV1 is
      * @param _timeConstant time in <days>*24*60*60 format
      */
     function setTimeConstant(uint256 _timeConstant) external onlyOwner {
+        require(_timeConstant != 0, "timeConstant cannot be zero");
         timeConstant = _timeConstant;
     }
 
